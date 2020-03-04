@@ -26,7 +26,7 @@ public class CSVBuilder<E> implements ICSVBulider {
     }
 
     @Override
-    public List getIndiaCensusCSVList(Reader reader, Class csvType) {
-        return (List) this.getCsvToBean(reader, csvType).parse();
+    public List<E> getIndiaCensusCSVList(Reader reader, Class csvType) {
+        return this.getCsvToBean(reader, csvType).parse();
     }
 }
