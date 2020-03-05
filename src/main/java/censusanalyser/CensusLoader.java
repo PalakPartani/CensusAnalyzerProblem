@@ -12,7 +12,15 @@ import java.util.stream.StreamSupport;
 
 public class CensusLoader {
 
-    public <E> Map<String, CensusDTO> loadCensusData(Class<E> censusCSVClass,String... csvFilePath) {
+    public Map<String, CensusDTO> loadCensusData(CensusAnalyser.Country country, String[] csvFilePath) {
+        if (country.equals(CensusAnalyser.Country.INDIA))
+            return this.loadCensusData(IndiaCensusCSV.class, csvFilePath);
+        else if (country.equals(CensusAnalyser.Country.US))
+            return this.loadCensusData(USCensusCSV.class, csvFilePath);
+        else throw new CensusAnalyserException("Invalid country", CensusAnalyserException.ExceptionType.INVALID_CLASS);
+    }
+
+    public <E> Map<String, CensusDTO> loadCensusData(Class<E> censusCSVClass, String... csvFilePath) {
         Map<String, CensusDTO> censusCSVMap = new HashMap<>();
         try (Reader reader = Files.newBufferedReader(Paths.get(csvFilePath[0]));) {
             ICSVBuilder csvBuilder = CSVBuilderFactory.createCSVBuilder();
@@ -27,7 +35,7 @@ public class CensusLoader {
                         .map(USCensusCSV.class::cast)
                         .forEach(csvState -> censusCSVMap.put(csvState.state, new CensusDTO(csvState)));
             }
-            if(csvFilePath.length==1) return censusCSVMap;
+            if (csvFilePath.length == 1) return censusCSVMap;
             this.loadIndianStateCode(censusCSVMap, csvFilePath[1]);
             return censusCSVMap;
         } catch (IOException e) {
@@ -35,6 +43,7 @@ public class CensusLoader {
                     CensusAnalyserException.ExceptionType.CENSUS_FILE_PROBLEM);
         }
     }
+
     private int loadIndianStateCode(Map<String, CensusDTO> censusCSVMap, String csvFilePath) {
         try (Reader reader = Files.newBufferedReader(Paths.get(csvFilePath))) {
             ICSVBuilder csvBuilder = CSVBuilderFactory.createCSVBuilder();
@@ -49,5 +58,4 @@ public class CensusLoader {
                     CensusAnalyserException.ExceptionType.CENSUS_FILE_PROBLEM);
         }
     }
-
 }
