@@ -10,9 +10,7 @@ import java.util.List;
 public class OpenCSVBuilder<E> implements ICSVBuilder {
     @Override
     public Iterator<E> getCSVFileIterator(Reader reader, Class csvClass) {
-
         return this.getCsvToBean(reader, csvClass).iterator();
-
     }
 
     @Override

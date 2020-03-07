@@ -2,67 +2,54 @@ package censusanalyser;
 
 import com.google.gson.Gson;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 public class CensusAnalyser {
+    public  Country country;
+
     public enum Country {INDIA, US}
 
-    Map<String, CensusDTO> censusCSVMap = null;
-    List<CensusDTO> collect = null;
 
-    public CensusAnalyser() {
-        this.collect = new ArrayList<CensusDTO>();
-        this.censusCSVMap = new HashMap<>();
+    Map<String, CensusDTO> censusCSVMap;
+    Map<SortData, Comparator<CensusDTO>> field = null;
+    List<CensusDTO> collect;
+
+    public CensusAnalyser(Country country) {
+       this.country=country;
+        this.field=new HashMap<>();
+        this.field.put(SortData.STATE, Comparator.comparing(census -> census.state));
+        this.field.put(SortData.POPULATION, Comparator.comparing(census -> census.population));
+        this.field.put(SortData.POPULATION_DENSITY, Comparator.comparing(census -> census.populationDensity));
+        this.field.put(SortData.TOTAL_AREA, Comparator.comparing(census -> census.totalArea));
+
     }
 
     public int loadCensusData(Country country, String... csvFilePath) {
-        censusCSVMap = new CensusLoader().loadCensusData(country, csvFilePath);
+        censusCSVMap = new CensusAdapterFactory().getCensusAdapter(country, csvFilePath);
+        System.out.println(censusCSVMap.size());
         return censusCSVMap.size();
     }
 
-    public int loadUSCensusData(String... csvFilePath) {
-        censusCSVMap = new CensusLoader().loadCensusData(USCensusCSV.class, csvFilePath);
-        return censusCSVMap.size();
-    }
-
-    public String getStateWiseSortedCensusData() {
-        collect = censusCSVMap.values().stream().collect(Collectors.toList());
-        if (collect == null || collect.size() == 0) {
-            throw new CensusAnalyserException("No Census Data", CensusAnalyserException.ExceptionType.NO_CENSUS_DATA);
+    public String getStateWiseSortedCensusData(SortData data) {
+        if (censusCSVMap == null || censusCSVMap.size() == 0) {
+            throw new CensusAnalyserException("No Census Data",
+                    CensusAnalyserException.ExceptionType.NO_CENSUS_DATA);
         }
-        Comparator<CensusDTO> censusComparator = Comparator.comparing(census -> census.state);
-
-        this.sort(censusComparator);
-        String sortedStateCensus = new Gson().toJson(collect);
-        return sortedStateCensus;
-
-    }
-
-    public String getPopulationWiseSortedCensusData() {
         collect = censusCSVMap.values().stream().collect(Collectors.toList());
-        if (collect == null || collect.size() == 0) {
-            throw new CensusAnalyserException("No Census Data", CensusAnalyserException.ExceptionType.NO_CENSUS_DATA);
-        }
-        Comparator<CensusDTO> censusComparator = Comparator.comparing(census -> census.population);
-        this.sort(censusComparator);
-        String sortedPopulation = new Gson().toJson(collect);
-        return sortedPopulation;
+        this.sort(collect, this.field.get(data));
+        String sortedStateCensusJson = new Gson().toJson(collect);
+        return sortedStateCensusJson;
     }
 
-    private void sort(Comparator<CensusDTO> censusComparator) {
-        for (int i = 0; i < collect.size() - 1; i++) {
-            for (int j = 0; j < collect.size() - 1 - i; j++) {
-                CensusDTO census1 = collect.get(j);
-                CensusDTO census2 = collect.get(j + 1);
+    private void sort(List<CensusDTO> collect, Comparator<CensusDTO> censusComparator) {
+        for (int i = 0; i < this.collect.size() - 1; i++) {
+            for (int j = 0; j < this.collect.size() - 1 - i; j++) {
+                CensusDTO census1 = this.collect.get(j);
+                CensusDTO census2 = this.collect.get(j + 1);
                 if (censusComparator.compare(census1, census2) > 0) {
-                    collect.set(j, census2);
-                    collect.set(j + 1, census1);
+                    this.collect.set(j, census2);
+                    this.collect.set(j + 1, census1);
                 }
             }
         }

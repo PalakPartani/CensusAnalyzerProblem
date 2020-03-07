@@ -21,4 +21,11 @@ public class CensusDTO {
         stateCode = usCensusCSV.stateId;
         totalArea = usCensusCSV.totalArea;
     }
+/*
+    public Object getCensus(CensusAnalyser.Country country) {
+        if (country.equals(CensusAnalyser.Country.US))
+            return new USCensusCSV(state, stateCode, population, populationDensity, totalArea);
+        return new IndiaCensusCSV(stateCode, state, populationDensity, population);
+    }*/
 }
+
